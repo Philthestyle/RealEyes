@@ -1,5 +1,5 @@
 //
-//  GradientCircleView.swift
+//  GradientCircle.swift
 //  RealEyes
 //
 //  Created by Ptitin on 04/07/2025.
@@ -8,7 +8,7 @@
 import SwiftUI
 
 /// Gradient circle for story items
-struct GradientCircleView: View {
+struct GradientCircle: View {
     let size: CGFloat
     let lineWidth: CGFloat
     let isSeen: Bool

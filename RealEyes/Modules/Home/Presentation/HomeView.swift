@@ -68,7 +68,7 @@ struct HomeView: View {
             //TODO: implement LoadingView or Skeleton later
                 ZStack {
                     // Gradient ring - Instagram size
-                    GradientCircleView(size: 90, lineWidth: 3.5, isSeen: false)
+                    GradientCircle(size: 90, lineWidth: 3.5, isSeen: false)
                     
                     // White border
                     Circle()
