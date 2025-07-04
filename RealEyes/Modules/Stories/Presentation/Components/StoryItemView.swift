@@ -5,6 +5,13 @@
 //  Created by Ptitin on 04/07/2025.
 //
 
+//
+//  StoryItemView.swift
+//  InstagramStoriesClone
+//
+//  Created by DevTeam on 30/06/2025.
+//
+
 import SwiftUI
 
 struct StoryItemView: View {
@@ -15,7 +22,7 @@ struct StoryItemView: View {
         VStack(spacing: 6) {
             ZStack {
                 // Gradient ring - Instagram size
-                GradientCircleView(size: 90, lineWidth: 3.5, isSeen: storyGroup.hasBeenSeen)
+                GradientCircle(size: 90, lineWidth: 3.5, isSeen: storyGroup.hasBeenSeen)
                 
                 // White border
                 Circle()
