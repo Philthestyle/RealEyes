@@ -11,8 +11,9 @@ import Foundation
 // MARK: - Story Service Implementation
 final class StoryService: StoryServiceProtocol {
     private let networkService: NetworkService
-    
     private(set) var stories: [StoryGroup] = []
+    
+    private let mockDataProvider = MockDataProvider.shared
     
     init() {
         self.networkService = DIContainer.shared.resolveOptional() ?? NetworkService.shared
@@ -39,5 +40,9 @@ final class StoryService: StoryServiceProtocol {
         if let index = stories.firstIndex(where: { $0.id == storyId }) {
             stories[index].hasBeenSeen = true
         }
+    }
+    
+    func loadMockStories() {
+        stories = mockDataProvider.generateMockStories()
     }
 }

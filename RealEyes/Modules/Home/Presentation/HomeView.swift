@@ -7,7 +7,6 @@
 
 import SwiftUI
 
-/// just a simple view for now to have a clean code from start
 struct HomeView: View {
     @StateObject private var viewModel = HomeViewModel()
     @State private var showStory = false
@@ -30,9 +29,6 @@ struct HomeView: View {
             .navigationBarHidden(true)
             .background(Color(UIColor.systemBackground))
         }
-        .fullScreenCover(isPresented: $showStory) {
-            //TODO: StoryGroupDetailsView
-        }
     }
     
     // MARK: - Main Content
@@ -44,67 +40,21 @@ struct HomeView: View {
             // Content with refresh
             ScrollView {
                 VStack(spacing: 0) {
-                    // Stories section - adjusted height for bigger circles to be Instagram like
+                    // Stories section - adjusted height for bigger circles
                     storiesSection
                         .frame(height: 140) // Increased to match Instagram size
                         .padding(.vertical, 10)
                     
                     Divider()
                     
-                    //TODO: Feed posts
+                    // Feed posts
+                    feedContent
+                        .padding(.top, 1)
                 }
             }
             .refreshable {
                 await viewModel.loadData()
             }
-        }
-    }
-    
-    // MARK: - Stories Section
-    @ViewBuilder
-    private var storiesSection: some View {
-        switch viewModel.storiesState {
-        case .idle, .loading:
-            //TODO: implement LoadingView or Skeleton later
-                ZStack {
-                    // Gradient ring - Instagram size
-                    GradientCircle(size: 90, lineWidth: 3.5, isSeen: false)
-                    
-                    // White border
-                    Circle()
-                        .fill(Color(UIColor.systemBackground))
-                        .frame(width: 82, height: 82)
-                    
-                    // Grey border for separation
-                    Circle()
-                        .stroke(Color.gray.opacity(0.1), lineWidth: 0.5)
-                        .frame(width: 78, height: 78)
-                    
-                }
-        case .loaded(let storyGroups):
-            StoriesScrollView(
-                stories: storyGroups,
-                onStoryTap: { storyGroup in
-                    currentStoryId = storyGroup.id.uuidString
-                    showStory = true
-                }
-            )
-            
-        case .error:
-            VStack {
-                Text("Failed to load stories")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                
-                Button("Retry") {
-                    Task {
-                        await viewModel.loadData()
-                    }
-                }
-                .font(.caption)
-                .buttonStyle(.bordered)
-            }
-            .padding()
         }
     }
     
@@ -163,4 +113,66 @@ struct HomeView: View {
         .padding(.top, 16)
     }
     
+    // MARK: - Stories Section
+    @ViewBuilder
+    private var storiesSection: some View {
+        switch viewModel.storiesState {
+        case .idle, .loading:
+            StoriesLoadingSkeleton()
+            
+        case .loaded(let storyGroups):
+            StoriesScrollView(
+                stories: storyGroups,
+                onStoryTap: { storyGroup in
+                    currentStoryId = storyGroup.id.uuidString
+                    showStory = true
+                }
+            )
+            
+        case .error:
+            VStack {
+                Text("Failed to load stories")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                
+                Button("Retry") {
+                    Task {
+                        await viewModel.loadData()
+                    }
+                }
+                .font(.caption)
+                .buttonStyle(.bordered)
+            }
+            .padding()
+        }
+    }
+    
+    // MARK: - Feed Content
+    @ViewBuilder
+    private var feedContent: some View {
+        LazyVStack(spacing: 0) {
+            switch viewModel.postsState {
+            case .idle, .loading:
+                LoadingView(style: .feed)
+                    .padding(.top, 20)
+                
+            case .loaded(let posts):
+                ForEach(posts) { post in
+                    PostView(post: post)
+                        .padding(.bottom, 20)
+                }
+                
+            case .error:
+                ErrorView(
+                    title: "Failed to load posts",
+                    onRetry: {
+                        Task {
+                            await viewModel.loadData()
+                        }
+                    }
+                )
+                .padding(.top, 40)
+            }
+        }
+    }
 }

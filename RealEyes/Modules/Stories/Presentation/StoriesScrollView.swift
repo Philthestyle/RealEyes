@@ -14,16 +14,15 @@ struct StoriesScrollView: View {
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 16) {
-                //TODO: Create Your story button view
-                // YourStoryButtonCircleView
+                // Your story button
+                YourStoryButton()
                 
                 // Story items
                 ForEach(stories) { storyGroup in
-                   // StoryCircleGradientProfilePictureView
                     StoryItemView(storyGroup: storyGroup)
                         .id("\(storyGroup.id)-\(storyGroup.hasBeenSeen)") // Force refresh when hasBeenSeen changes
                         .onTapGesture {
-                            //TODO: manage isShowing StoryGroupDetailView bottomSheet
+                            onStoryTap(storyGroup)
                         }
                 }
             }
