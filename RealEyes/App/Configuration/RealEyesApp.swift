@@ -28,11 +28,16 @@ struct RealEyesApp: App {
     /// Sets up dependency injection container with all required services
     /// This ensures all dependencies are available before the app starts
     private func setupDependencies() {
-        //  TODO: Register core services
-       
+        let container = DIContainer.shared
         
-        // TODO: Register feature services
+        // Core services
+        container.register(NetworkService.shared)
         
-        print("✅ RealEyes - Dependencies registered")
+        // Register feature services
+        container.register(StoryServiceProtocol.self) { StoryService() }
+        
+        print("✅ Dependencies registered")
+        print("   - NetworkService (Singleton)")
+        print("   - StoryService")
     }
 }

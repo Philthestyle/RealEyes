@@ -60,32 +60,45 @@ struct MainTabView: View {
         }
         .accentColor(.primary)
         .onAppear {
-            setupTabBarAppearance()
+            self.setupAppearance()
         }
     }
     
-    private func setupTabBarAppearance() {
-        // Instagram style tab bar
-        let appearance = UITabBarAppearance()
-        appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColor.systemBackground
-        appearance.shadowColor = UIColor.separator
+    // MARK: - Setup Appearance
+    private func setupAppearance() {
+        // Navigation Bar
+        let navAppearance = UINavigationBarAppearance()
+        navAppearance.configureWithOpaqueBackground()
+        navAppearance.backgroundColor = .systemBackground
+        navAppearance.shadowColor = .clear
+        
+        UINavigationBar.appearance().standardAppearance = navAppearance
+        UINavigationBar.appearance().scrollEdgeAppearance = navAppearance
+        UINavigationBar.appearance().compactAppearance = navAppearance
+        
+        // Tab Bar
+        let tabAppearance = UITabBarAppearance()
+        tabAppearance.configureWithOpaqueBackground()
+        tabAppearance.backgroundColor = .systemBackground
+        tabAppearance.shadowColor = .separator
         
         // Configure item appearance
         let itemAppearance = UITabBarItemAppearance()
-        itemAppearance.normal.iconColor = UIColor.label
-        itemAppearance.selected.iconColor = UIColor.label
+        itemAppearance.normal.iconColor = .label
+        itemAppearance.selected.iconColor = .label
         
-        appearance.stackedLayoutAppearance = itemAppearance
-        appearance.inlineLayoutAppearance = itemAppearance
-        appearance.compactInlineLayoutAppearance = itemAppearance
+        tabAppearance.stackedLayoutAppearance = itemAppearance
+        tabAppearance.inlineLayoutAppearance = itemAppearance
+        tabAppearance.compactInlineLayoutAppearance = itemAppearance
         
-        UITabBar.appearance().standardAppearance = appearance
-        UITabBar.appearance().scrollEdgeAppearance = appearance
+        UITabBar.appearance().standardAppearance = tabAppearance
+        UITabBar.appearance().scrollEdgeAppearance = tabAppearance
         
-        // Remove tab bar titles (Instagram style)
+        // Remove tab titles (Instagram style)
         UITabBarItem.appearance().setTitleTextAttributes([
             NSAttributedString.Key.font: UIFont.systemFont(ofSize: 0.1)
         ], for: .normal)
+        
+        print("✅ UI Appearance configured")
     }
 }
