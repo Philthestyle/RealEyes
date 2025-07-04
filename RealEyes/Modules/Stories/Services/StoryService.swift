@@ -33,4 +33,11 @@ final class StoryService: StoryServiceProtocol {
             print("Failed to load from API, using mock data: \(error)")
         }
     }
+    
+    // MARK: Update methods
+    func markAsSeen(_ storyId: UUID) {
+        if let index = stories.firstIndex(where: { $0.id == storyId }) {
+            stories[index].hasBeenSeen = true
+        }
+    }
 }
