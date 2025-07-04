@@ -10,21 +10,29 @@ import UIKit
 
 class MockDataProvider {
     static let shared = MockDataProvider()
+    private let cache = SessionDataCache.shared
     
-    // High-quality profile images URLs (these could be local assets)
-    private let profileImageUrls = [
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400", // Woman 1
-        "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=400", // Man 1
-        "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400", // Man 2
-        "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400", // Woman 2
-        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400", // Man 3
-        "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400", // Woman 3
-        "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400", // Man 4
-        "https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=400"  // Man 5
+    // High-quality profile images URLs from Unsplash
+    let profileImageUrls = [
+        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400", // Woman 1 - Professional
+        "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=400", // Man 1 - Smiling
+        "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400", // Man 2 - Avatar style
+        "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400", // Woman 2 - Casual
+        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400", // Man 3 - Outdoor
+        "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400", // Woman 3 - Portrait
+        "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400", // Man 4 - Professional
+        "https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=400", // Man 5 - Glasses
+        "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400", // Woman 4 - Fashion
+        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400"  // Man 6 - Friendly
     ]
     
     func generateMockUsers() -> [User] {
-
+        // Return cached users if available
+        if let cachedUsers = cache.getCachedUsers() {
+            return cachedUsers
+        }
+        
+        // Generate new users and cache them
         let users = [
             User(id: 1, username: "naturelover", firstName: "Alice", lastName: "Johnson",
                  image: profileImageUrls[0]),
@@ -44,11 +52,16 @@ class MockDataProvider {
                  image: profileImageUrls[7])
         ]
         
+        cache.setCachedUsers(users)
         return users
     }
     
     func generateMockStories() -> [StoryGroup] {
-
+        // Return cached stories if available
+        if let cachedStories = cache.getCachedStories() {
+            return cachedStories
+        }
+        
         // Generate new stories and cache them
         let users = generateMockUsers()
         let storyContent = [
@@ -114,10 +127,15 @@ class MockDataProvider {
             return storyGroup
         }
         
+        cache.setCachedStories(stories)
         return stories
     }
     
     func generateMockPosts() -> [Post] {
+        // Return cached posts if available
+        if let cachedPosts = cache.getCachedPosts() {
+            return cachedPosts
+        }
         
         // Generate new posts and cache them
         let users = generateMockUsers()
@@ -155,7 +173,8 @@ class MockDataProvider {
                 imageURL: content.image
             )
         }
-    
+        
+        cache.setCachedPosts(posts)
         return posts
     }
 }

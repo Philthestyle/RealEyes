@@ -15,6 +15,11 @@ struct PostView: View {
     @State private var isLiked = false
     @State private var isBookmarked = false
     @State private var likes: Int
+    @State private var showHeartAnimation = false
+    @State private var heartScale: CGFloat = 1.0
+    
+    // Haptic feedback generator
+    private let impactFeedback = UIImpactFeedbackGenerator(style: .heavy)
     
     init(post: Post, onLike: (() -> Void)? = nil, onSave: (() -> Void)? = nil) {
         self.post = post
@@ -28,8 +33,21 @@ struct PostView: View {
             // Header
             postHeader
             
-            // Image
-            postImage
+            // Image with heart animation overlay
+            ZStack {
+                postImage
+                
+                // Heart animation overlay
+                if showHeartAnimation {
+                    Image(systemName: "heart.fill")
+                        .font(.system(size: 100))
+                        .foregroundColor(.white)
+                        .shadow(color: .black.opacity(0.3), radius: 10)
+                        .scaleEffect(showHeartAnimation ? 1.2 : 0.5)
+                        .opacity(showHeartAnimation ? 0 : 1)
+                        .animation(.easeOut(duration: 0.6), value: showHeartAnimation)
+                }
+            }
             
             // Actions
             postActions
@@ -46,6 +64,10 @@ struct PostView: View {
             postCaption
         }
         .background(Color(UIColor.systemBackground))
+        .onAppear {
+            // Prepare haptic engine
+            impactFeedback.prepare()
+        }
     }
     
     private var postHeader: some View {
@@ -54,7 +76,7 @@ struct PostView: View {
             PostAvatarView(userId: post.userId, hasStory: true, size: 32)
             
             // Username
-            Text("user_\(post.userId)")
+            Text(post.title)
                 .font(.system(size: 14, weight: .semibold))
             
             Spacer()
@@ -108,11 +130,13 @@ struct PostView: View {
     
     private var postActions: some View {
         HStack(spacing: 16) {
-            // Like
+            // Like with scale animation
             Button(action: handleLike) {
                 Image(systemName: isLiked ? "heart.fill" : "heart")
                     .font(.system(size: 22))
                     .foregroundColor(isLiked ? .red : .primary)
+                    .scaleEffect(heartScale)
+                    .animation(.spring(response: 0.3, dampingFraction: 0.6), value: heartScale)
             }
             
             // Comment
@@ -167,24 +191,55 @@ struct PostView: View {
     
     // MARK: - Actions
     private func handleLike() {
+        // Haptic feedback
+        impactFeedback.impactOccurred()
+        
         withAnimation(.spring()) {
             isLiked.toggle()
             likes += isLiked ? 1 : -1
         }
+        
+        // Animate heart button
+        animateHeartButton()
+        
         onLike?()
     }
     
     private func handleDoubleTapLike() {
-        if !isLiked {
-            withAnimation(.spring()) {
-                isLiked = true
-                likes += 1
-            }
-            onLike?()
+        // Strong haptic feedback for double tap
+        impactFeedback.impactOccurred()
+        
+        // Toggle like state on double tap
+        withAnimation(.spring()) {
+            isLiked.toggle()
+            likes += isLiked ? 1 : -1
+        }
+        
+        // Animate the heart button
+        animateHeartButton()
+        
+        // Always show heart animation
+        showHeartAnimation = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            showHeartAnimation = false
+        }
+        
+        onLike?()
+    }
+    
+    private func animateHeartButton() {
+        // Bounce animation for heart button
+        heartScale = 1.3
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            heartScale = 1.0
         }
     }
     
     private func handleSave() {
+        // Light haptic for bookmark
+        let lightImpact = UIImpactFeedbackGenerator(style: .light)
+        lightImpact.impactOccurred()
+        
         withAnimation(.spring()) {
             isBookmarked.toggle()
         }

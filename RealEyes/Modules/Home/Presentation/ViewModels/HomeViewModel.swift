@@ -57,6 +57,9 @@ final class HomeViewModel: ObservableObject {
     
     // MARK: - Public Methods
     func loadData() async {
+        print("\n🏠 [HomeViewModel] Starting concurrent data loading with TaskGroup...")
+        print("⚡ [HomeViewModel] Loading Stories and Posts in PARALLEL for better performance")
+        
         if !hasInitiallyLoaded {
             // Initial load - show loading states
             storiesState = .loading
@@ -68,23 +71,32 @@ final class HomeViewModel: ObservableObject {
         
         // Load both concurrently
         await withTaskGroup(of: Void.self) { group in
+            print("🔄 [HomeViewModel] TaskGroup started - launching parallel tasks...")
+            
             group.addTask { [weak self] in
+                print("📈 [HomeViewModel] Task 1: Loading Stories...")
                 await self?.loadStories()
             }
             
             group.addTask { [weak self] in
+                print("📈 [HomeViewModel] Task 2: Loading Posts...")
                 await self?.loadPosts()
             }
         }
         
         // Ensure minimum loading time for smooth transition
         let elapsed = Date().timeIntervalSince(startTime)
+        print("⏱️ [HomeViewModel] Data loaded in \(String(format: "%.2f", elapsed)) seconds")
+        
         if elapsed < minimumLoadingDuration && !hasInitiallyLoaded {
             try? await Task.sleep(nanoseconds: UInt64((minimumLoadingDuration - elapsed) * 1_000_000_000))
         }
         
         hasInitiallyLoaded = true
         isRefreshing = false
+        
+        print("🎉 [HomeViewModel] All data loaded successfully!")
+        print("📊 [HomeViewModel] Stories: \(storyGroups.count), Posts: \(posts.count)\n")
     }
     
     func markStoryGroupAsSeen(_ story: StoryGroup) {

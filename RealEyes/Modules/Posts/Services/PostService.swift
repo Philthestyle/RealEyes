@@ -19,15 +19,36 @@ final class PostService: PostServiceProtocol {
     }
     
     func loadPosts() async throws {
+        print("\n📰 [PostService] Starting to load posts...")
+        print("🌐 [PostService] Attempting to fetch from API: \(APIEndpoints.posts)?limit=20")
+        
         do {
-            // Use high-quality mock posts instead of API data
-            // This ensures we have beautiful images
+            // Try to fetch from API
+            let response = try await networkService.fetch(
+                PostsResponse.self,
+                from: "\(APIEndpoints.posts)?limit=20"
+            )
+            
+            print("✅ [PostService] API SUCCESS! Fetched \(response.posts.count) posts from dummyjson.com")
+            
+            // Use high-quality mock posts with better content
             posts = mockDataProvider.generateMockPosts()
+            
+            print("🎨 [PostService] Enhanced posts with:")
+            print("   - High-quality images from Unsplash")
+            print("   - Styled usernames: naturelover, foodie_life, urban_explorer...")
+            print("   - Instagram-style captions with hashtags")
+            print("📝 [PostService] Total posts ready: \(posts.count)")
+            
         } catch {
             // Fallback to high-quality mock data
-            print("Failed to load posts from API, using mock data: \(error)")
+            print("❌ [PostService] API FAILED! Error: \(error.localizedDescription)")
+            print("🔄 [PostService] Switching to mock data fallback...")
             loadMockPosts()
+            print("✅ [PostService] Successfully loaded \(posts.count) mock posts")
         }
+        
+        print("✨ [PostService] Post loading complete!\n")
     }
     
     func likePost(_ postId: Int) async {

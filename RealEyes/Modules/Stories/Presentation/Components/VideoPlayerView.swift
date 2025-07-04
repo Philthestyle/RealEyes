@@ -11,6 +11,7 @@ import AVKit
 struct VideoPlayerView: View {
     let videoURL: URL
     @State private var player: AVPlayer?
+    @State private var observer: Any?
     
     var body: some View {
         VideoPlayer(player: player)
@@ -18,8 +19,7 @@ struct VideoPlayerView: View {
                 setupPlayer()
             }
             .onDisappear {
-                player?.pause()
-                player = nil
+                cleanupPlayer()
             }
     }
     
@@ -28,14 +28,25 @@ struct VideoPlayerView: View {
         player?.play()
         
         // Loop video
-        NotificationCenter.default.addObserver(
-            forName: .AVPlayerItemDidPlayToEndTime,
-            object: player?.currentItem,
-            queue: .main
-        ) { _ in
-            player?.seek(to: .zero)
-            player?.play()
+        if let currentItem = player?.currentItem {
+            observer = NotificationCenter.default.addObserver(
+                forName: .AVPlayerItemDidPlayToEndTime,
+                object: currentItem,
+                queue: .main
+            ) { _ in
+                self.player?.seek(to: .zero)
+                self.player?.play()
+            }
         }
+    }
+    
+    private func cleanupPlayer() {
+        player?.pause()
+        if let observer = observer {
+            NotificationCenter.default.removeObserver(observer)
+        }
+        player = nil
+        observer = nil
     }
 }
 

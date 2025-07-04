@@ -86,6 +86,9 @@ struct StoryCardView: View {
     @State private var currentIndex: Int = 0
     @State private var isPaused: Bool = false
     
+    // Haptic feedback generator
+    private let impactFeedback = UIImpactFeedbackGenerator(style: .heavy)
+    
     var body: some View {
         GeometryReader { proxy in
             let size = proxy.size
@@ -227,6 +230,8 @@ struct StoryCardView: View {
         }
         .onAppear {
             startCurrentStory()
+            // Prepare haptic engine
+            impactFeedback.prepare()
         }
         .onDisappear {
             progressDriver.stop()
@@ -291,6 +296,9 @@ struct StoryCardView: View {
             if groupIndex < stories.count - 1 {
                 let nextStoryId = stories[groupIndex + 1].id.uuidString
                 
+                // Haptic feedback when changing story group
+                impactFeedback.impactOccurred()
+                
                 // Trigger smooth animation
                 DispatchQueue.main.async {
                     StoryNavigationHandler.navigateToStory(nextStoryId, currentStoryId: self.$currentStoryId)
@@ -306,6 +314,9 @@ struct StoryCardView: View {
         } else {
             if groupIndex > 0 {
                 let prevStoryId = stories[groupIndex - 1].id.uuidString
+                
+                // Haptic feedback when changing story group
+                impactFeedback.impactOccurred()
                 
                 // Trigger smooth animation
                 DispatchQueue.main.async {

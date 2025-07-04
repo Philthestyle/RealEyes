@@ -11,6 +11,7 @@ import SwiftUI
 struct RealEyesApp: App {
     @StateObject private var profileManager = ProfileImageManager.shared
     @State private var showProfileSetup = false
+    @State private var showLaunchScreen = true
     
     init() {
         setupDependencies()
@@ -19,14 +20,31 @@ struct RealEyesApp: App {
     
     var body: some Scene {
         WindowGroup {
-            MainTabView()
-                .onAppear {
-                    checkProfileSetup()
-                    print("✅ Instagram Stories Clone - App launched successfully")
+            ZStack {
+                MainTabView()
+                    .onAppear {
+                        checkProfileSetup()
+                        print("✅ Instagram Stories Clone - App launched successfully")
+                    }
+                    .sheet(isPresented: $showProfileSetup) {
+                        ProfileImageSetupView()
+                    }
+                
+                // Launch Screen overlay
+                if showLaunchScreen {
+                    LaunchScreenView()
+                        .transition(.opacity)
+                        .zIndex(1)
+                        .onAppear {
+                            // Hide launch screen after 2 seconds
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                                withAnimation(.easeOut(duration: 0.5)) {
+                                    showLaunchScreen = false
+                                }
+                            }
+                        }
                 }
-                .sheet(isPresented: $showProfileSetup) {
-                    ProfileImageSetupView()
-                }
+            }
         }
     }
     

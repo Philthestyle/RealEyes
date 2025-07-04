@@ -12,6 +12,7 @@ struct HomeView: View {
     @State private var showStory = false
     @State private var currentStoryId = ""
     @State private var isAnimating = false
+    @State private var isRefreshing = false
     
     var body: some View {
         NavigationView {
@@ -42,6 +43,17 @@ struct HomeView: View {
             
             // Content with refresh
             ScrollView {
+                // Custom pull to refresh indicator
+                if isRefreshing {
+                    HStack {
+                        Spacer()
+                        MiniRainbowLoader()
+                            .padding(.top, 10)
+                            .padding(.bottom, 20)
+                        Spacer()
+                    }
+                }
+                
                 VStack(spacing: 0) {
                     // Stories section - adjusted height for bigger circles
                     storiesSection
@@ -56,7 +68,9 @@ struct HomeView: View {
                 }
             }
             .refreshable {
+                isRefreshing = true
                 await viewModel.loadData()
+                isRefreshing = false
             }
         }
     }
@@ -64,37 +78,8 @@ struct HomeView: View {
     // MARK: - Header
     private var instagramHeader: some View {
         HStack {
-            HStack(alignment: .top, spacing: -5) {
-                let realGradient = LinearGradient(
-                    colors: [
-                        Color(red: 0.96, green: 0.36, blue: 0.22),
-                        Color(red: 0.87, green: 0.16, blue: 0.50),
-                        Color(red: 0.51, green: 0.20, blue: 0.69),
-                        Color(red: 0.32, green: 0.36, blue: 0.83)
-                    ],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
-                
-                let eyesGradient = LinearGradient(
-                    colors: [
-                        Color(red: 0.96, green: 0.36, blue: 0.22),
-                        Color(red: 0.87, green: 0.16, blue: 0.50),
-                        Color(red: 0.51, green: 0.20, blue: 0.69),
-                        Color(red: 0.32, green: 0.36, blue: 0.83)
-                    ],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
-                
-                Text("Real")
-                    .foregroundStyle(realGradient)
-                
-                Text("Eyes")
-                    .foregroundStyle(eyesGradient)
-            }
-            .font(.system(size: 36, weight: .bold, design: .rounded))
-            
+            // Logo RealEyes avec style Instagram
+            RealEyesLogoView(height: 100)
             
             Spacer()
             
@@ -114,6 +99,7 @@ struct HomeView: View {
         }
         .padding(.horizontal)
         .padding(.top, 16)
+        .padding(.bottom, 8)
     }
     
     // MARK: - Stories Section

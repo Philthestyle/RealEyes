@@ -47,12 +47,12 @@ struct YourStoryButton: View {
                         .frame(width: 22, height: 22)
                         .overlay(
                             Circle()
-                                .stroke(profileManager.hasProfileImage ? Color.gray.opacity(0.3) : Color.clear, lineWidth: 1)
+                                .stroke(profileManager.hasProfileImage ? Color.black.opacity(0.3) : Color.clear, lineWidth: 1)
                         )
                         .overlay(
                             Image(systemName: profileManager.hasProfileImage ? "pencil" : "plus")
                                 .font(.system(size: profileManager.hasProfileImage ? 12 : 14, weight: .bold))
-                                .foregroundColor(profileManager.hasProfileImage ? .gray : .white)
+                                .foregroundColor(profileManager.hasProfileImage ? .black : .white)
                         )
                 }
                 .offset(x: 2, y: 2)

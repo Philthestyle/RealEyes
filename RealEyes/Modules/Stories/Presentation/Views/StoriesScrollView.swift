@@ -13,22 +13,25 @@ struct StoriesScrollView: View {
     
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 16) {
+            LazyHStack(spacing: 16) {
                 // Your story button
                 YourStoryButton()
                 
-                // Story items
-                ForEach(stories) { storyGroup in
-                    StoryItemView(storyGroup: storyGroup)
-                        .id("\(storyGroup.id)-\(storyGroup.hasBeenSeen)") // Force refresh when hasBeenSeen changes
-                        .onTapGesture {
-                            onStoryTap(storyGroup)
-                        }
+                // Infinite stories with LazyHStack for performance
+                ForEach(0..<1000, id: \.self) { pageIndex in
+                    ForEach(stories.indices, id: \.self) { storyIndex in
+                        let storyGroup = stories[storyIndex]
+                        StoryItemView(storyGroup: storyGroup)
+                            .id("\(pageIndex)-\(storyIndex)-\(storyGroup.id)-\(storyGroup.hasBeenSeen)")
+                            .onTapGesture {
+                                onStoryTap(storyGroup)
+                            }
+                    }
                 }
             }
             .padding(.horizontal)
-            .padding(.top, 8) // Add top padding to prevent clipping
-            .padding(.bottom, 4) // Add small bottom padding for balance
+            .padding(.top, 8)
+            .padding(.bottom, 4)
         }
     }
 }
