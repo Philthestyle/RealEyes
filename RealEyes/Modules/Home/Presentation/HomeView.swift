@@ -29,6 +29,9 @@ struct HomeView: View {
             .navigationBarHidden(true)
             .background(Color(UIColor.systemBackground))
         }
+        .fullScreenCover(isPresented: $showStory) {
+            storyDetailView
+        }
     }
     
     // MARK: - Main Content
@@ -173,6 +176,19 @@ struct HomeView: View {
                 )
                 .padding(.top, 40)
             }
+        }
+    }
+    
+    // MARK: - Story Detail View
+    @ViewBuilder
+    private var storyDetailView: some View {
+        if case .loaded(_) = viewModel.storiesState {
+            StoryDetailView(
+                viewModel: viewModel,
+                currentStory: $currentStoryId,
+                showStory: $showStory,
+                isAnimating: $isAnimating
+            )
         }
     }
 }
