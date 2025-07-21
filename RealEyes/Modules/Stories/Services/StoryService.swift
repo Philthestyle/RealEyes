@@ -15,18 +15,6 @@ final class StoryService: StoryServiceProtocol {
     
     private let mockDataProvider = MockDataProvider.shared
     
-    // UserDefaults key for seen stories
-    private let seenStoriesKey = "com.realeyes.seenStories"
-    private var seenStoryIds: Set<String> {
-        get {
-            let array = UserDefaults.standard.stringArray(forKey: seenStoriesKey) ?? []
-            return Set(array)
-        }
-        set {
-            UserDefaults.standard.set(Array(newValue), forKey: seenStoriesKey)
-        }
-    }
-    
     init() {
         self.networkService = DIContainer.shared.resolveOptional() ?? NetworkService.shared
     }
@@ -49,19 +37,6 @@ final class StoryService: StoryServiceProtocol {
             print("🎨 [StoryService] Enhanced API data with high-quality images from Unsplash")
             print("📸 [StoryService] Created \(stories.count) story groups with \(stories.map { $0.stories.count }.reduce(0, +)) total stories")
             
-            // Restore seen state from UserDefaults
-            let seenIds = seenStoryIds
-            var restoredCount = 0
-            for index in stories.indices {
-                if seenIds.contains(stories[index].id.uuidString) {
-                    stories[index].hasBeenSeen = true
-                    restoredCount += 1
-                }
-            }
-            if restoredCount > 0 {
-                print("💾 [StoryService] Restored \(restoredCount) seen states from UserDefaults")
-            }
-            
         } catch {
             // Fallback to high-quality mock data
             print("❌ [StoryService] API FAILED! Error: \(error.localizedDescription)")
@@ -73,27 +48,29 @@ final class StoryService: StoryServiceProtocol {
         print("✨ [StoryService] Story loading complete!\n")
     }
     
-    // MARK: Update methods
-    func markAsSeen(_ storyId: UUID) {
+    // ✅ FIX: Utiliser SessionDataCache pour la persistance
+    func markAsSeen(_ storyId: String) {
         if let index = stories.firstIndex(where: { $0.id == storyId }) {
             stories[index].hasBeenSeen = true
             
-            // Persist to UserDefaults
-            var currentSeenIds = seenStoryIds
-            currentSeenIds.insert(storyId.uuidString)
-            seenStoryIds = currentSeenIds
+            // 🎯 Utiliser SessionDataCache au lieu du système local
+            SessionDataCache.shared.markStoryAsSeen(storyId)
+            
+            print("🎯 Story marked as seen via SessionDataCache: \(storyId)")
         }
     }
     
     func loadMockStories() {
         stories = mockDataProvider.generateMockStories()
         
-        // IMPORTANT: Restore seen state from UserDefaults for mock stories too!
-        let seenIds = seenStoryIds
+        // ✅ FIX: Appliquer les états "vus" depuis SessionDataCache
         for index in stories.indices {
-            if seenIds.contains(stories[index].id.uuidString) {
+            let storyId = stories[index].id
+            if SessionDataCache.shared.isStorySeen(storyId) {
                 stories[index].hasBeenSeen = true
             }
         }
+        
+        print("💾 [StoryService] Applied seen states from SessionDataCache")
     }
 }

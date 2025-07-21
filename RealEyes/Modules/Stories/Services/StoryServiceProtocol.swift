@@ -15,4 +15,5 @@ protocol StoryServiceProtocol {
     
     // MARK: - Methods
     func loadStories() async throws
+    func markAsSeen(_ storyId: String) // ✅ FIX: String au lieu de UUID
 }

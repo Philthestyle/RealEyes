@@ -102,19 +102,29 @@ final class HomeViewModel: ObservableObject {
     func markStoryGroupAsSeen(_ story: StoryGroup) {
         print("🎯 Marking story as seen: \(story.user.username)")
         
-        // Update service first
+        // 1. Marquer dans le service (qui utilise maintenant SessionDataCache)
         storyService.markAsSeen(story.id)
         
-        // Get updated stories from service to ensure consistency
-        let updatedStories = storyService.stories
-        
-        // Update state with animation for smooth UI update
-        withAnimation(.easeInOut(duration: 0.3)) {
-            storiesState = .loaded(updatedStories)
+        // 2. Mettre à jour l'état local immédiatement pour UI responsive
+        if case .loaded(let currentStories) = storiesState {
+            let updatedStories = currentStories.map { currentStory in
+                if currentStory.id == story.id {
+                    var updated = currentStory
+                    updated.hasBeenSeen = true
+                    return updated
+                }
+                return currentStory
+            }
+            
+            // Mettre à jour avec animation pour smooth UI update
+            withAnimation(.easeInOut(duration: 0.3)) {
+                storiesState = .loaded(updatedStories)
+            }
         }
         
-        // Debug: Check if update worked
-        if let updatedStory = updatedStories.first(where: { $0.id == story.id }) {
+        // 3. Debug: Vérifier que la mise à jour a fonctionné
+        if case .loaded(let stories) = storiesState,
+           let updatedStory = stories.first(where: { $0.id == story.id }) {
             print("✅ Story marked as seen: \(updatedStory.user.username) - hasBeenSeen: \(updatedStory.hasBeenSeen)")
         }
     }

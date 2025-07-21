@@ -33,21 +33,31 @@ struct MockStories {
                 image: profileImageUrl // Use real profile photo
             )
             
-            var story = StoryGroup(
-                user: user,
-                imageURL: profileImageUrl,
-                timestamp: Date().addingTimeInterval(-Double.random(in: 3600...86400))
-            )
-            
             // Create stories with real images
             let storyCount = Int.random(in: 2...4)
-            story.stories = (0..<storyCount).map { storyIndex in
+            let stories = (0..<storyCount).map { storyIndex in
                 let imageIndex = (index * storyCount + storyIndex) % storyImages.count
                 return Story(imageURL: storyImages[imageIndex])
             }
             
-            story.hasBeenSeen = false // Start with all unseen
-            return story
+            // ✅ FIX: Timestamp FIXE basé sur l'ID user (déterministe)
+            let fixedBaseTimestamp: TimeInterval = 1704067200 // 2024-01-01 00:00:00 UTC
+            let timestamp = Date(timeIntervalSince1970: fixedBaseTimestamp - Double(apiUser.id * 3600))
+            
+            // ✅ FIX: Utiliser le nouveau constructeur avec tous les paramètres
+            let story = StoryGroup(
+                user: user,
+                imageURL: profileImageUrl,
+                timestamp: timestamp, // 🎯 Utiliser le timestamp fixe
+                hasBeenSeen: false, // Sera mis à jour ci-dessous 
+                stories: stories
+            )
+            
+            // 🎯 Appliquer l'état "vu" depuis SessionDataCache
+            var updatedStory = story
+            updatedStory.hasBeenSeen = SessionDataCache.shared.isStorySeen(story.id)
+            
+            return updatedStory
         }
     }
 }

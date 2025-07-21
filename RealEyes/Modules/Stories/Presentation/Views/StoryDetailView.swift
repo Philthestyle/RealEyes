@@ -33,12 +33,12 @@ struct StoryDetailView: View {
                             showStory: $showStory,
                             isAnimating: $isAnimating,
                             onMarkAsSeen: { storyId in
-                                if let storyGroup = viewModel.storyGroups.first(where: { $0.id.uuidString == storyId }) {
+                                if let storyGroup = viewModel.storyGroups.first(where: { $0.id == storyId }) {
                                     viewModel.markStoryGroupAsSeen(storyGroup)
                                 }
                             }
                         )
-                        .tag(bundle.id.uuidString)
+                        .tag(bundle.id)
                     }
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))

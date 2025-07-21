@@ -67,13 +67,14 @@ public final class StoriesViewModel: ObservableObject {
         }
     }
     
+    // ✅ FIX: ID déjà un String, plus besoin de .uuidString
     func selectStory(_ storyGroup: StoryGroup) {
-        selectedStoryId = storyGroup.id.uuidString
+        selectedStoryId = storyGroup.id // 🎯 Directement l'ID string
         showStoryDetail = true
     }
     
     func markStoryAsSeen(_ storyGroup: StoryGroup) {
-        storyService.markAsSeen(storyGroup.id)
+        storyService.markAsSeen(storyGroup.id) // 🎯 Passe directement l'ID string
         
         // Update local state
         if var stories = state.data,

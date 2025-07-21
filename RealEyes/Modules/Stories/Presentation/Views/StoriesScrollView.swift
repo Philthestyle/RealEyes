@@ -17,12 +17,13 @@ struct StoriesScrollView: View {
                 // Your story button
                 YourStoryButton()
                 
-                // Infinite stories with LazyHStack for performance
+                // ✅ FIX: Infinite stories avec IDs stables
                 ForEach(0..<1000, id: \.self) { pageIndex in
                     ForEach(stories.indices, id: \.self) { storyIndex in
                         let storyGroup = stories[storyIndex]
                         StoryItemView(storyGroup: storyGroup)
-                            .id("\(pageIndex)-\(storyIndex)-\(storyGroup.id)-\(storyGroup.hasBeenSeen)")
+                            // 🎯 ID avec l'état "seen" pour forcer refresh UI
+                            .id("\(pageIndex)-\(storyGroup.id)-\(storyGroup.hasBeenSeen)")
                             .onTapGesture {
                                 onStoryTap(storyGroup)
                             }

@@ -255,7 +255,7 @@ struct StoryCardView: View {
             startCurrentStory()
         } else {
             // Mark as seen when we've viewed all stories and tap to go next
-            onMarkAsSeen(storyGroup.id.uuidString)
+            onMarkAsSeen(storyGroup.id)
             updateStoryGroup(forward: true)
         }
     }
@@ -282,7 +282,7 @@ struct StoryCardView: View {
         } else {
             // Mark as seen when we've viewed all stories in the group
             print("📍 Calling onMarkAsSeen for \(storyGroup.user.username) after viewing all \(storyGroup.stories.count) stories")
-            onMarkAsSeen(storyGroup.id.uuidString)
+            onMarkAsSeen(storyGroup.id)
             updateStoryGroup(forward: true)
         }
     }
@@ -294,7 +294,7 @@ struct StoryCardView: View {
         
         if forward {
             if groupIndex < stories.count - 1 {
-                let nextStoryId = stories[groupIndex + 1].id.uuidString
+                let nextStoryId = stories[groupIndex + 1].id
                 
                 // Haptic feedback when changing story group
                 impactFeedback.impactOccurred()
@@ -313,7 +313,7 @@ struct StoryCardView: View {
             }
         } else {
             if groupIndex > 0 {
-                let prevStoryId = stories[groupIndex - 1].id.uuidString
+                let prevStoryId = stories[groupIndex - 1].id
                 
                 // Haptic feedback when changing story group
                 impactFeedback.impactOccurred()

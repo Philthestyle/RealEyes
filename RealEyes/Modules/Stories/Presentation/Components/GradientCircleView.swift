@@ -20,7 +20,9 @@ struct GradientCircle: View {
     }
     
     var body: some View {
-        Circle()
+        let _ = print("🔴 [GradientCircle] isSeen: \(isSeen) - will show \(isSeen ? "GRAY" : "COLORFUL") circle")
+        
+        return Circle()
             .stroke(
                 isSeen ? AnyShapeStyle(Color.gray.opacity(0.3)) : AnyShapeStyle(gradient),
                 lineWidth: lineWidth

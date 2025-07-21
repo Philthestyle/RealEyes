@@ -21,6 +21,9 @@ struct StoryItemView: View {
     var body: some View {
         VStack(spacing: 6) {
             ZStack {
+                // 🎯 Debug: Vérifier l'état "seen"
+                let _ = print("🔵 [StoryItemView] \(storyGroup.user.username) - hasBeenSeen: \(storyGroup.hasBeenSeen)")
+                
                 // Gradient ring - Instagram size
                 GradientCircle(size: 90, lineWidth: 3.5, isSeen: storyGroup.hasBeenSeen)
                 

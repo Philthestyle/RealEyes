@@ -113,7 +113,7 @@ struct HomeView: View {
             StoriesScrollView(
                 stories: storyGroups,
                 onStoryTap: { storyGroup in
-                    currentStoryId = storyGroup.id.uuidString
+                    currentStoryId = storyGroup.id
                     showStory = true
                 }
             )

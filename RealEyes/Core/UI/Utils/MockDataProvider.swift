@@ -57,9 +57,18 @@ class MockDataProvider {
     }
     
     func generateMockStories() -> [StoryGroup] {
+        // 🧹 TEMP: Clear old cache avec anciens IDs variables (seulement au début du test)
+//         cache.clearPersistentData() // ← Décommentez pour reset complet
+        
         // Return cached stories if available
         if let cachedStories = cache.getCachedStories() {
-            return cachedStories
+            // ✅ FIX: Toujours appliquer les états "vus" actuels
+            let updatedStories = cachedStories.map { story in
+                var updatedStory = story
+                updatedStory.hasBeenSeen = cache.isStorySeen(story.id)
+                return updatedStory
+            }
+            return updatedStories
         }
         
         // Generate new stories and cache them
@@ -111,24 +120,48 @@ class MockDataProvider {
             ]
         ]
         
+        // ✅ FIX: Timestamps FIXES et déterministes (ne changent jamais)
+        // Base fixe: 1er janvier 2024 00:00:00 UTC
+        let fixedBaseTimestamp: TimeInterval = 1704067200 // 2024-01-01 00:00:00 UTC
         let stories = users.enumerated().map { index, user in
-            var storyGroup = StoryGroup(
+            // 🎯 Timestamp fixe pour chaque user (JAMAIS ne change)
+            let timestamp = Date(timeIntervalSince1970: fixedBaseTimestamp - Double(index * 3600))
+            
+            let storyGroup = StoryGroup(
                 user: user,
                 imageURL: user.image,
-                timestamp: Date().addingTimeInterval(-Double.random(in: 3600...86400))
+                timestamp: timestamp,
+                hasBeenSeen: false, // Sera mis à jour ci-dessous
+                stories: storyContent[index % storyContent.count]
             )
-            
-            // Add stories for this user
-            storyGroup.stories = storyContent[index % storyContent.count]
-            
-            // Randomly mark some as seen
-            storyGroup.hasBeenSeen = index > 4
             
             return storyGroup
         }
         
-        cache.setCachedStories(stories)
-        return stories
+        // ✅ FIX: Appliquer les états "vus" depuis SessionDataCache
+        let finalStories = stories.map { story in
+            var updatedStory = story
+            let isSeen = cache.isStorySeen(story.id)
+            updatedStory.hasBeenSeen = isSeen
+            
+            // Debug: Log de restauration
+            if isSeen {
+                print("💾 [MockDataProvider] Restored SEEN state for \(story.user.username) (\(story.id))")
+            }
+            
+            return updatedStory
+        }
+        
+        print("💾 [MockDataProvider] Restored \(finalStories.filter { $0.hasBeenSeen }.count) seen stories out of \(finalStories.count)")
+        
+        // Debug: Log des IDs générés pour vérification
+        print("🆔 [MockDataProvider] Generated IDs:")
+        for story in finalStories {
+            print("  🔑 \(story.user.username): \(story.id)")
+        }
+        
+        cache.setCachedStories(finalStories)
+        return finalStories
     }
     
     func generateMockPosts() -> [Post] {
