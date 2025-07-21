@@ -256,6 +256,7 @@
 				DEVELOPMENT_TEAM = UVC4JM6XD4;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = RealEyesV2;
 				INFOPLIST_KEY_NSCameraUsageDescription = "RealEyes needs access to your camera to take photos for your stories and posts.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "RealEyes needs permission to save photos to your photo library.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "RealEyes needs access to your photo library to select photos for your stories and posts.";
@@ -291,6 +292,7 @@
 				DEVELOPMENT_TEAM = UVC4JM6XD4;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = RealEyesV2;
 				INFOPLIST_KEY_NSCameraUsageDescription = "RealEyes needs access to your camera to take photos for your stories and posts.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "RealEyes needs permission to save photos to your photo library.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "RealEyes needs access to your photo library to select photos for your stories and posts.";
