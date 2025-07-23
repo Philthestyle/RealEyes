@@ -1,24 +1,24 @@
+////
+////  ContentView.swift
+////  RealEyes
+////
+////  Created by Ptitin on 04/07/2025.
+////
 //
-//  ContentView.swift
-//  RealEyes
+//import SwiftUI
 //
-//  Created by Ptitin on 04/07/2025.
+//struct ContentView: View {
+//    var body: some View {
+//        VStack {
+//            Image(systemName: "globe")
+//                .imageScale(.large)
+//                .foregroundStyle(.tint)
+//            Text("Hello, world!")
+//        }
+//        .padding()
+//    }
+//}
 //
-
-import SwiftUI
-
-struct ContentView: View {
-    var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
-        }
-        .padding()
-    }
-}
-
-#Preview {
-    ContentView()
-}
+//#Preview {
+//    ContentView()
+//}

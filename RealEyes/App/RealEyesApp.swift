@@ -13,12 +13,17 @@ struct RealEyesApp: App {
     @State private var showProfileSetup = false
     @State private var showLaunchScreen = true
     
+    
+    // MEMORY Mointro
+    @StateObject private var memoryMonitor = MemoryMonitor()
+    
     init() {
         // INITIALISATION DE L'APP
         // Ordre important : DI avant appearance
         // DI peut être utilisé dans appearance config
         setupDependencies()
         setupAppearance()
+        print("🚀 [RealEyes] Memory monitoring started...")
     }
     
     var body: some Scene {
@@ -49,6 +54,7 @@ struct RealEyesApp: App {
                 }
             }
         }
+       
     }
     
     private func checkProfileSetup() {
@@ -72,7 +78,7 @@ struct RealEyesApp: App {
         // SERVICES - FACTORY PATTERN
         // Nouvelle instance à chaque resolve()
         // Permet d'avoir des états indépendants
-        // 
+        //
         // DOUBLE ENREGISTREMENT (Protocol + Concrete):
         // - Protocol pour l'injection dans les ViewModels (abstraction)
         // - Concrete pour les cas spécifiques (tests, debug)

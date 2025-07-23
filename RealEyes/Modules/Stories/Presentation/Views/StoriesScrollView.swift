@@ -40,6 +40,8 @@ struct StoriesScrollView: View {
                 // - Détecter quand on approche de la fin
                 // - Ajouter dynamiquement des pages
                 // - Plus complexe, peu de valeur ajoutée ici
+                
+                // ATTENTION: j aurai du utiliser un MAPPPER pour faire ca au lieu de le faire dans la View... je n y ai pas fais attention
                 ForEach(0..<1000, id: \.self) { pageIndex in
                     ForEach(stories.indices, id: \.self) { storyIndex in
                         let storyGroup = stories[storyIndex]
