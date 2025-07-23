@@ -15,6 +15,17 @@ struct RainbowLoader: View {
     var size: CGFloat = 60
     var lineWidth: CGFloat = 4
     
+    /// GRADIENT ANGULAIRE INSTAGRAM
+    /// 
+    /// POURQUOI ANGULAR vs LINEAR ?
+    /// - AngularGradient tourne autour d'un centre
+    /// - Parfait pour une animation de rotation
+    /// - Crée l'effet "arc-en-ciel tournant"
+    /// 
+    /// COULEURS:
+    /// - Exactement les mêmes que le gradient Instagram
+    /// - Transition smooth entre chaque couleur
+    /// - Dernière couleur = première pour boucle parfaite
     private let gradient = AngularGradient(
         colors: [
             Color(red: 0.95, green: 0.42, blue: 0.31),    // Orange-red
@@ -35,22 +46,31 @@ struct RainbowLoader: View {
             Circle()
                 .stroke(Color.gray.opacity(0.1), lineWidth: lineWidth * 0.75)
             
-            // Animated rainbow circle
+            // CERCLE ARC-EN-CIEL ANIMÉ
             Circle()
+                // TRIM: Dessine seulement une partie du cercle
+                // De 0 (début) à trimEnd (variable animée)
                 .trim(from: 0, to: trimEnd)
                 .stroke(
                     gradient,
                     style: StrokeStyle(
                         lineWidth: lineWidth,
-                        lineCap: .round
+                        lineCap: .round  // Bouts arrondis = plus doux
                     )
                 )
+                // DOUBLE ANIMATION:
+                // 1. Rotation complète (360°) en 1 seconde
+                // 2. Croissance/réduction du trait (trim)
                 .rotationEffect(.degrees(rotation))
                 .animation(.linear(duration: 1).repeatForever(autoreverses: false), value: rotation)
                 .onAppear {
+                    // Déclenche la rotation infinie
                     rotation = 360
                     
-                    // Animate the trim for a growing effect
+                    // ANIMATION DE CROISSANCE
+                    // trimEnd: 0.1 -> 0.8 -> 0.1 ...
+                    // Crée un effet de "respiration" du loader
+                    // 1.5s avec easeInOut = mouvement naturel
                     withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
                         trimEnd = 0.8
                     }

@@ -18,7 +18,17 @@ struct PostView: View {
     @State private var showHeartAnimation = false
     @State private var heartScale: CGFloat = 1.0
     
-    // Haptic feedback generator
+    /// HAPTIC FEEDBACK GENERATOR
+    /// 
+    /// STYLE .heavy - POURQUOI ?
+    /// - Feedback fort et satisfaisant pour le like
+    /// - Cohérent avec Instagram
+    /// - Plus perceptible que .light ou .medium
+    /// 
+    /// IMPACT vs NOTIFICATION vs SELECTION:
+    /// - Impact: Pour les actions importantes (like, unlike)
+    /// - Notification: Pour les alertes/erreurs
+    /// - Selection: Pour les changements de sélection
     private let impactFeedback = UIImpactFeedbackGenerator(style: .heavy)
     
     init(post: Post, onLike: (() -> Void)? = nil, onSave: (() -> Void)? = nil) {
@@ -65,7 +75,10 @@ struct PostView: View {
         }
         .background(Color(UIColor.systemBackground))
         .onAppear {
-            // Prepare haptic engine
+            // PREPARE HAPTIC ENGINE
+            // prepare() pré-charge le moteur haptique
+            // Réduit la latence lors du premier feedback
+            // Appelé à l'avance pour une réponse instantanée
             impactFeedback.prepare()
         }
     }
@@ -206,19 +219,28 @@ struct PostView: View {
     }
     
     private func handleDoubleTapLike() {
-        // Strong haptic feedback for double tap
+        // HAPTIC FEEDBACK IMMÉDIAT
+        // Feedback tactile avant toute animation visuelle
+        // Donne une réponse instantanée à l'utilisateur
         impactFeedback.impactOccurred()
         
-        // Toggle like state on double tap
-        withAnimation(.spring()) {
-            isLiked.toggle()
-            likes += isLiked ? 1 : -1
+        // COMPORTEMENT INSTAGRAM DOUBLE TAP:
+        // - Si pas liké -> Like
+        // - Si déjà liké -> RESTE liké (ne dislike jamais)
+        // C'est le comportement exact d'Instagram
+        if !isLiked {
+            withAnimation(.spring()) {
+                isLiked = true
+                likes += 1
+            }
         }
         
         // Animate the heart button
         animateHeartButton()
         
-        // Always show heart animation
+        // ANIMATION CŒUR BLANC
+        // Toujours afficher l'animation, même si déjà liké
+        // Feedback visuel satisfaisant
         showHeartAnimation = true
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
             showHeartAnimation = false
@@ -228,7 +250,20 @@ struct PostView: View {
     }
     
     private func animateHeartButton() {
-        // Bounce animation for heart button
+        // BOUNCE ANIMATION PATTERN
+        // 
+        // TECHNIQUE:
+        // 1. Scale up rapide (1.0 -> 1.3)
+        // 2. Retour avec spring animation
+        // 
+        // TIMING:
+        // - 0.1s pour le pic = rapide mais visible
+        // - Spring animation pour retour naturel
+        // 
+        // POURQUOI 1.3 ?
+        // - 1.5+ = trop exagéré
+        // - 1.1 = trop subtil
+        // - 1.3 = sweet spot Instagram-like
         heartScale = 1.3
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             heartScale = 1.0

@@ -7,15 +7,34 @@
 
 import Foundation
 
-// ✅ Enhanced cache with real persistence
+/// Cache de session avec persistance UserDefaults
+/// 
+/// ARCHITECTURE DE CACHE:
+/// 1. Cache mémoire (propriétés) pour accès rapide
+/// 2. Persistance UserDefaults pour survie au kill de l'app
+/// 3. Séparation des données et des états
+/// 
+/// POURQUOI USERDEFAULTS vs CORE DATA ?
+/// - Simplicité : Pas de setup Core Data
+/// - Léger : Données simples (seen states)
+/// - Suffisant : < 1MB de données
+/// - Synchrone : Pas de complexité async
+/// 
+/// LIMITATIONS:
+/// - Max ~1MB total dans UserDefaults
+/// - Pas de requêtes complexes
+/// - Seulement des types Property List
 class SessionDataCache {
     static let shared = SessionDataCache()
     
+    // CACHE MÉMOIRE
+    // Optionals pour lazy loading
     private var cachedStories: [StoryGroup]?
     private var cachedPosts: [Post]?
     private var cachedUsers: [User]?
     
-    // 🎯 UserDefaults keys for persistence
+    // CLÉS USERDEFAULTS
+    // Namespace pour éviter les collisions
     private enum Keys {
         static let stories = "cached_stories"
         static let posts = "cached_posts" 
@@ -47,6 +66,14 @@ class SessionDataCache {
     }
     
     // MARK: - Story Seen States Management
+    /// Marque une story comme vue et persiste l'état
+    /// 
+    /// FLOW:
+    /// 1. Récupère les états actuels
+    /// 2. Ajoute le nouvel ID
+    /// 3. Sauvegarde immédiatement
+    /// 
+    /// THREAD-SAFETY: UserDefaults est thread-safe
     func markStoryAsSeen(_ storyGroupId: String) {
         var seenStates = getSeenStates()
         seenStates[storyGroupId] = true
@@ -67,8 +94,14 @@ class SessionDataCache {
     }
     
     private func getSeenStates() -> [String: Bool] {
+        // RÉCUPÉRATION SÛRE AVEC FALLBACK
+        // Cast as? pour éviter les crashes si corruption
+        // Dictionary vide par défaut
         let states = UserDefaults.standard.dictionary(forKey: Keys.storySeenStates) as? [String: Bool] ?? [:]
         
+        // DEBUG LOGGING
+        // Utile pour vérifier la persistance
+        // En production, utiliser un vrai logger
         if !states.isEmpty {
             print("💾 [SessionDataCache] Loaded \(states.count) seen states from UserDefaults:")
             for (storyId, seen) in states {
@@ -88,6 +121,13 @@ class SessionDataCache {
     }
     
     // MARK: - Disk Persistence
+    /// Encode et sauvegarde les stories dans UserDefaults
+    /// 
+    /// ATTENTION: UserDefaults a une limite de ~1MB
+    /// Pour plus de données, utiliser FileManager ou Core Data
+    /// 
+    /// ERROR HANDLING: Log seulement, pas de throw
+    /// L'app doit fonctionner même si la persistance échoue
     private func persistStoriesToDisk(_ stories: [StoryGroup]) {
         do {
             let data = try JSONEncoder().encode(stories)
@@ -103,7 +143,10 @@ class SessionDataCache {
         do {
             var stories = try JSONDecoder().decode([StoryGroup].self, from: data)
             
-            // Apply current seen states
+            // SYNCHRONISATION DES ÉTATS
+            // Les seen states sont stockés séparément
+            // On les applique aux stories chargées
+            // Permet de modifier les states sans re-sauver toutes les stories
             let seenStates = getSeenStates()
             stories = stories.map { story in
                 var updatedStory = story
@@ -150,7 +193,14 @@ class SessionDataCache {
         print("🧹 [SessionDataCache] Cleared all persistent data")
     }
     
-    // ✅ BONUS: Debug info
+    // DEBUG HELPER
+    /// Retourne un résumé de l'état du cache
+    /// Utile pour le debugging et les tests
+    /// 
+    /// UTILISATION:
+    /// - Afficher dans une vue debug
+    /// - Logger au démarrage
+    /// - Vérifier dans les tests
     func getDebugInfo() -> String {
         let memoryStories = cachedStories?.count ?? 0
         let seenStatesCount = getSeenStates().count

@@ -10,6 +10,19 @@ import Combine
 import QuartzCore
 
 // MARK: - StoryProgressDriver using CADisplayLink for smooth 60fps animations
+/// Driver de progression utilisant CADisplayLink pour une animation fluide
+/// 
+/// POURQUOI CADISPLAYLINK PLUTÔT QUE TIMER?
+/// 1. Synchronisé avec le refresh rate de l'écran (60/120 FPS)
+/// 2. Pas de drift temporel (Timer peut dériver)
+/// 3. Automatiquement pausé quand l'app est en background
+/// 4. Meilleure intégration avec le rendu iOS
+/// 5. Performance optimale pour les animations UI
+/// 
+/// UTILISATION DANS CE CONTEXTE:
+/// - Progress bar des stories Instagram nécessite une fluidité parfaite
+/// - L'utilisateur remarque immédiatement les saccades
+/// - CADisplayLink garantit une progression smooth
 final class StoryProgressDriver: ObservableObject {
     @Published var progress: Double = 0.0
     
@@ -59,7 +72,14 @@ final class StoryProgressDriver: ObservableObject {
         let elapsed = CACurrentMediaTime() - start
         let newProgress = min(elapsed / duration, 1.0)
         
-        // Update on main thread for smooth UI updates
+        // POURQUOI CETTE VÉRIFICATION THREAD?
+        // - Protection défensive : même si on ajoute à .main, certains edge cases
+        // - Futur-proof : si le code évolue et qu'on change le RunLoop
+        // - Bonne pratique : toujours vérifier quand on touche l'UI
+        // - Performance : évite un dispatch inutile si déjà sur main
+        // 
+        // NOTE: Avec .add(to: .main, forMode: .common), on est toujours sur main
+        // mais cette vérification ne coûte rien et évite les crashes
         if Thread.isMainThread {
             self.progress = newProgress
         } else {
@@ -86,7 +106,9 @@ struct StoryCardView: View {
     @State private var currentIndex: Int = 0
     @State private var isPaused: Bool = false
     
-    // Haptic feedback generator
+    // HAPTIC FEEDBACK - Retour tactile premium
+    // Style .heavy pour un feedback satisfaisant lors du changement de story
+    // Comparable à Instagram : renforce l'immersion et la qualité perçue
     private let impactFeedback = UIImpactFeedbackGenerator(style: .heavy)
     
     var body: some View {
@@ -215,13 +237,24 @@ struct StoryCardView: View {
                 .padding(.top, proxy.safeAreaInsets.top)
             }
             
-            // 3D Cube rotation effect
-            .rotation3DEffect(
-                angle(proxy),
-                axis: (x: 0, y: 1, z: 0),
-                anchor: proxy.frame(in: .global).minX > 0 ? .leading : .trailing,
-                perspective: 2.5
-            )
+            // EFFET 3D CUBE - Animation signature des stories
+            // 
+            // COMMENT ÇA MARCHE:
+            // 1. angle(proxy) calcule l'angle selon la position horizontale
+            // 2. axis: (x:0, y:1, z:0) = rotation autour de l'axe Y (vertical)
+            // 3. anchor dynamique : pivot sur le bord visible pour effet réaliste
+            // 4. perspective: 2.5 = profondeur modérée (ni trop plat, ni trop déformé)
+    // 
+    // MATH DERRIÈRE L'EFFET:
+    // - Position X négative = story à gauche = rotation positive
+    // - Position X positive = story à droite = rotation négative
+    // - Crée l'illusion d'un cube 3D qui tourne
+    .rotation3DEffect(
+        angle(proxy),
+        axis: (x: 0, y: 1, z: 0),
+        anchor: proxy.frame(in: .global).minX > 0 ? .leading : .trailing,
+        perspective: 2.5
+    )
         }
         .onChange(of: progressDriver.progress) { newProgress in
             if newProgress >= 1.0 && !isPaused {
@@ -296,7 +329,10 @@ struct StoryCardView: View {
             if groupIndex < stories.count - 1 {
                 let nextStoryId = stories[groupIndex + 1].id
                 
-                // Haptic feedback when changing story group
+                // HAPTIC FEEDBACK SYNCHRONISÉ
+                // Déclenché précisément au moment du changement de story group
+                // Renforce la sensation de "passage" entre les stories
+                // L'utilisateur "sent" littéralement le swipe
                 impactFeedback.impactOccurred()
                 
                 // Trigger smooth animation
@@ -330,6 +366,21 @@ struct StoryCardView: View {
     }
 
     private func angle(_ proxy: GeometryProxy) -> Angle {
+        // CALCUL DE L'ANGLE DE ROTATION 3D
+        // 
+        // frame(in: .global) : Position absolue dans l'écran
+        // - Nécessaire car on veut la position par rapport à l'écran, pas au parent
+        // - .local donnerait la position dans le TabView (toujours 0)
+        // 
+        // FORMULE:
+        // progress = position X / largeur de la vue
+        // - Story centrée : minX ≈ 0, progress ≈ 0, angle ≈ 0°
+        // - Story à gauche : minX < 0, progress négatif, rotation dans un sens
+        // - Story à droite : minX > 0, progress positif, rotation opposée
+        // 
+        // rotationAngle = 45° : Angle max pour un effet cube prononcé
+        // - Trop petit (< 30°) : effet trop subtil
+        // - Trop grand (> 60°) : déformation excessive
         let progress = proxy.frame(in: .global).minX / proxy.size.width
         let rotationAngle: CGFloat = 45
         let degrees = rotationAngle * progress

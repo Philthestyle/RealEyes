@@ -16,6 +16,13 @@ import Foundation
 import SwiftUI
 import Combine
 
+/// ViewModel principal de l'écran Home
+/// Coordonne le chargement des stories et posts
+/// 
+/// ARCHITECTURE DECISION:
+/// - Un seul ViewModel pour l'écran entier (pas de sur-décomposition)
+/// - Gère plusieurs sources de données (stories + posts)
+/// - Utilise TaskGroup pour le chargement parallèle
 @MainActor
 final class HomeViewModel: ObservableObject {
     // MARK: - Published Properties
@@ -49,7 +56,10 @@ final class HomeViewModel: ObservableObject {
         self.storyService = DIContainer.shared.resolveOptional() ?? StoryService()
         self.postService = DIContainer.shared.resolveOptional() ?? PostService()
         
-        // Start loading immediately
+        // CHARGEMENT INITIAL AU LANCEMENT
+        // Task non structurée car on veut que le chargement continue
+        // même si la vue est recréée
+        // Alternative: .task {} dans la vue, mais moins fiable
         Task {
             await loadData()
         }
@@ -60,6 +70,9 @@ final class HomeViewModel: ObservableObject {
         print("\n🏠 [HomeViewModel] Starting concurrent data loading with TaskGroup...")
         print("⚡ [HomeViewModel] Loading Stories and Posts in PARALLEL for better performance")
         
+        // GESTION DES ÉTATS DE CHARGEMENT
+        // Seulement au premier chargement pour éviter le flash
+        // Pull-to-refresh ne change pas l'état (UX plus smooth)
         if !hasInitiallyLoaded {
             // Initial load - show loading states
             storiesState = .loading
@@ -69,7 +82,18 @@ final class HomeViewModel: ObservableObject {
         isRefreshing = true
         let startTime = Date()
         
-        // Load both concurrently
+        // TASKGROUP POUR CHARGEMENT CONCURRENT
+        // 
+        // POURQUOI TASKGROUP vs ASYNC LET ?
+        // 1. TaskGroup est extensible (facile d'ajouter d'autres tasks)
+        // 2. Meilleur contrôle sur l'annulation
+        // 3. Pattern plus clean pour N opérations
+        // 4. Gestion d'erreur unifiée possible
+        // 
+        // POURQUOI [weak self] ?
+        // - Évite les retain cycles si la Task survit au ViewModel
+        // - Bonne pratique même si @MainActor minimise le risque
+        // - Cohérent avec les patterns Combine
         await withTaskGroup(of: Void.self) { group in
             print("🔄 [HomeViewModel] TaskGroup started - launching parallel tasks...")
             
@@ -84,7 +108,10 @@ final class HomeViewModel: ObservableObject {
             }
         }
         
-        // Ensure minimum loading time for smooth transition
+        // MINIMUM LOADING TIME
+        // Seulement au premier chargement
+        // Évite l'effet "flash" si l'API est trop rapide
+        // Améliore la perception de qualité
         let elapsed = Date().timeIntervalSince(startTime)
         print("⏱️ [HomeViewModel] Data loaded in \(String(format: "%.2f", elapsed)) seconds")
         
@@ -102,10 +129,15 @@ final class HomeViewModel: ObservableObject {
     func markStoryGroupAsSeen(_ story: StoryGroup) {
         print("🎯 Marking story as seen: \(story.user.username)")
         
-        // 1. Marquer dans le service (qui utilise maintenant SessionDataCache)
+        // PATTERN DE MISE À JOUR EN 3 ÉTAPES
+        // 
+        // 1. SERVICE LAYER (Source de vérité)
+        // Persiste l'état dans SessionDataCache/UserDefaults
         storyService.markAsSeen(story.id)
         
-        // 2. Mettre à jour l'état local immédiatement pour UI responsive
+        // 2. UI STATE (Réactivité immédiate)
+        // Met à jour l'état local pour feedback instantané
+        // L'utilisateur voit le changement sans attendre
         if case .loaded(let currentStories) = storiesState {
             let updatedStories = currentStories.map { currentStory in
                 if currentStory.id == story.id {
@@ -116,13 +148,17 @@ final class HomeViewModel: ObservableObject {
                 return currentStory
             }
             
-            // Mettre à jour avec animation pour smooth UI update
+            // ANIMATION SUBTILE
+            // Transition smooth du gradient vers gris
+            // 0.3s = durée standard iOS
             withAnimation(.easeInOut(duration: 0.3)) {
                 storiesState = .loaded(updatedStories)
             }
         }
         
-        // 3. Debug: Vérifier que la mise à jour a fonctionné
+        // 3. VALIDATION (Debug only)
+        // Vérifie que l'update a bien été appliqué
+        // Utile pour débugger les problèmes de state
         if case .loaded(let stories) = storiesState,
            let updatedStory = stories.first(where: { $0.id == story.id }) {
             print("✅ Story marked as seen: \(updatedStory.user.username) - hasBeenSeen: \(updatedStory.hasBeenSeen)")

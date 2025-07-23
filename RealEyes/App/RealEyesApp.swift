@@ -14,6 +14,9 @@ struct RealEyesApp: App {
     @State private var showLaunchScreen = true
     
     init() {
+        // INITIALISATION DE L'APP
+        // Ordre important : DI avant appearance
+        // DI peut être utilisé dans appearance config
         setupDependencies()
         setupAppearance()
     }
@@ -61,18 +64,27 @@ struct RealEyesApp: App {
     private func setupDependencies() {
         let container = DIContainer.shared
         
-        // Register Network Service (Singleton)
+        // NETWORK SERVICE - SINGLETON
+        // Partagé dans toute l'app (URLSession est thread-safe)
+        // Évite de créer plusieurs sessions HTTP
         container.register(NetworkService.shared)
         
-        // Register Services
+        // SERVICES - FACTORY PATTERN
+        // Nouvelle instance à chaque resolve()
+        // Permet d'avoir des états indépendants
+        // 
+        // DOUBLE ENREGISTREMENT (Protocol + Concrete):
+        // - Protocol pour l'injection dans les ViewModels (abstraction)
+        // - Concrete pour les cas spécifiques (tests, debug)
         container.register(StoryServiceProtocol.self) { StoryService() }
         container.register(PostServiceProtocol.self) { PostService() }
         
-        // For convenience, also register concrete types
         container.register(StoryService.self) { StoryService() }
         container.register(PostService.self) { PostService() }
         
-        // Register ProfileImageManager as singleton
+        // PROFILE MANAGER - SINGLETON
+        // Gère l'image de profil unique de l'utilisateur
+        // Doit persister pendant toute la session
         container.register(ProfileImageManager.shared)
         
         print("✅ Dependencies registered:")
@@ -84,21 +96,23 @@ struct RealEyesApp: App {
     
     // MARK: - Setup Appearance
     private func setupAppearance() {
-        // Navigation Bar
+        // NAVIGATION BAR CONFIGURATION
+        // Style Instagram : fond blanc/noir selon le mode, pas d'ombre
         let navAppearance = UINavigationBarAppearance()
         navAppearance.configureWithOpaqueBackground()
-        navAppearance.backgroundColor = .systemBackground
-        navAppearance.shadowColor = .clear
+        navAppearance.backgroundColor = .systemBackground  // Adaptatif light/dark
+        navAppearance.shadowColor = .clear  // Pas de ligne de séparation
         
         UINavigationBar.appearance().standardAppearance = navAppearance
         UINavigationBar.appearance().scrollEdgeAppearance = navAppearance
         UINavigationBar.appearance().compactAppearance = navAppearance
         
-        // Tab Bar
+        // TAB BAR CONFIGURATION
+        // Style Instagram : fond opaque, ligne de séparation subtile
         let tabAppearance = UITabBarAppearance()
         tabAppearance.configureWithOpaqueBackground()
         tabAppearance.backgroundColor = .systemBackground
-        tabAppearance.shadowColor = .separator
+        tabAppearance.shadowColor = .separator  // Ligne subtile en haut
         
         // Configure item appearance
         let itemAppearance = UITabBarItemAppearance()
@@ -112,7 +126,10 @@ struct RealEyesApp: App {
         UITabBar.appearance().standardAppearance = tabAppearance
         UITabBar.appearance().scrollEdgeAppearance = tabAppearance
         
-        // Remove tab titles (Instagram style)
+        // REMOVE TAB TITLES - INSTAGRAM STYLE
+        // Instagram n'affiche que les icônes, pas de texte
+        // Trick : police taille 0.1 (invisible mais présente pour VoiceOver)
+        // Alternative : titlePositionAdjustment mais moins fiable
         UITabBarItem.appearance().setTitleTextAttributes([
             NSAttributedString.Key.font: UIFont.systemFont(ofSize: 0.1)
         ], for: .normal)
